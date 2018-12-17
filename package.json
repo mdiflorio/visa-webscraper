@@ -1,7 +1,7 @@
 {
   "name": "visa-webscraper",
   "version": "1.0.0",
-  "description": "NodeJS webscraper for getting visa requirements from Wikipedia",
+  "description": "NodeJS webscraper for getting visa requirements for each nationality from Wikipedia",
   "main": "index.js",
   "scripts": {
     "start": "node ./index.js"
