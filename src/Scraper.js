@@ -2,15 +2,15 @@ const fs = require("fs");
 const rp = require("request-promise");
 const $ = require("cheerio");
 
-module.exports = async function scraper() {
+module.exports = function scraper() {
   const BASE_URL = "https://en.wikipedia.org";
   const url = `${BASE_URL}/wiki/Category:Visa_requirements_by_nationality`;
 
   console.log("Scraping away...");
 
   // Get html from url
-  await rp(url)
-    .then(async html => {
+  rp(url)
+    .then(html => {
       // Get list of links of different nationality requirement wiki pages.
       const nationalityRequirements = $(
         ".mw-category-group > ul > li > a",
@@ -18,7 +18,7 @@ module.exports = async function scraper() {
       );
 
       // Go through list of nationality links
-      await nationalityRequirements.map(async i => {
+      nationalityRequirements.map(i => {
         // Parse nationality name
         let nationalityName = nationalityRequirements[i].attribs.title;
         nationalityName = nationalityName
@@ -64,7 +64,7 @@ module.exports = async function scraper() {
                 .replace(/\[.*\]/g, "")
                 .trim();
 
-              const country = `Australian;${name};${visa};${duration};${note};\n`;
+              const country = `${nationalityName};${name};${visa};${duration};${note};\n`;
 
               // Appends line to data.csv
               fs.appendFileSync("./output/data.csv", country, "utf-8", err => {
