@@ -36,41 +36,42 @@ module.exports = async function scraper() {
         rp(options).then(nationalityHtml => {
           let countries = "";
           // Get each field in the table rows
-          $(".sortable > tbody > tr > td > a", nationalityHtml).each(function(
-            i
-          ) {
-            let name = $(this)
-              .text()
-              .trim();
-            let visa = $(this)
-              .parent()
-              .next()
-              .text()
-              .replace(/\[.*\]/g, "")
-              .trim();
-            let duration = $(this)
-              .parent()
-              .next()
-              .next()
-              .text()
-              .trim();
-            let note = $(this)
-              .parent()
-              .next()
-              .next()
-              .next()
-              .text()
-              .replace(/\[.*\]/g, "")
-              .trim();
+          $(".sortable", nationalityHtml)
+            .first()
+            .find("tbody > tr > td > a")
+            .each(function(i) {
+              let name = $(this)
+                .text()
+                .trim();
+              let visa = $(this)
+                .parent()
+                .next()
+                .text()
+                .replace(/\[.*\]/g, "")
+                .trim();
+              let duration = $(this)
+                .parent()
+                .next()
+                .next()
+                .text()
+                .trim();
+              let note = $(this)
+                .parent()
+                .next()
+                .next()
+                .next()
+                .text()
+                .replace(/\[.*\]/g, "")
+                .trim();
 
-            const country = `${nationalityName},${name},${visa},${duration},${note}\n`;
+              const country = `Australian;${name};${visa};${duration};${note};\n`;
 
-            // Appends line to data.csv
-            fs.appendFileSync("./output/data.csv", country, "utf-8", err => {
-              console.log("Error apending to file");
+              // Appends line to data.csv
+              fs.appendFileSync("./output/data.csv", country, "utf-8", err => {
+                console.log("Error apending to file");
+              });
+              countries += country;
             });
-            countries += country;
-          });
         });
       });
     })
@@ -78,3 +79,10 @@ module.exports = async function scraper() {
       console.log("Error: ", err);
     });
 };
+
+// module.exports = function scraper() {
+//   // Get html from each nationality page
+//   let options = {
+//     uri: `https://en.wikipedia.org/wiki/Visa_requirements_for_Australian_citizens`
+//   };
+// };
