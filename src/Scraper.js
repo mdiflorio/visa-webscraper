@@ -8,6 +8,14 @@ module.exports = function scraper() {
 
   console.log("Scraping away...");
 
+  // Clear file and write headers in CSV file
+  const header = `nationality;country;visaType;duration;note;\n`;
+  fs.writeFile("./output/data.csv", header, "utf-8", err => {
+    if (err) {
+      console.log("Error clearing and added header to file", err);
+    }
+  });
+
   // Get html from url
   rp(url)
     .then(html => {
