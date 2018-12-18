@@ -88,10 +88,3 @@ module.exports = function scraper() {
       console.log("Error: ", err);
     });
 };
-
-// module.exports = function scraper() {
-//   // Get html from each nationality page
-//   let options = {
-//     uri: `https://en.wikipedia.org/wiki/Visa_requirements_for_Australian_citizens`
-//   };
-// };
