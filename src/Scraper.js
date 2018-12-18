@@ -69,7 +69,8 @@ module.exports = function scraper() {
                 .next()
                 .next()
                 .text()
-                .replace(/\[.*\]/g, "")
+                .replace(/\[.*\]/g, "") // Removes wiki citations in the format "[num]"
+                .replace(/[\n\r]+/g, " ") // Removes any returns
                 .trim();
 
               const country = `${nationalityName};${name};${visa};${duration};${note};\n`;
