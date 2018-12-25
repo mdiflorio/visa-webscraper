@@ -4,3 +4,7 @@
 output/data\.csv
 
 \.DS_Store
+
+output/data-nationalities\.csv
+
+output/nationalities\.csv
