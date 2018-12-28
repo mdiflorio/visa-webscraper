@@ -13,13 +13,7 @@ module.exports = function scraper() {
 
   return new Promise((resolve, reject) => {
     // Clear file and write headers in CSV file
-    const header = `nationality;country;visaType;duration;note;\n`;
-    fs.writeFile("./output/data.csv", header, "utf-8", err => {
-      if (err) {
-        console.log("Error clearing and added header to file", err);
-        reject(err);
-      }
-    });
+    clearDataCSV(reject);
 
     urls.forEach((url, urlIndex) => {
       // Get html from urls
@@ -34,13 +28,10 @@ module.exports = function scraper() {
           // Go through list of nationality links
           nationalityRequirements.map((i, natIndex) => {
             // Parse nationality name
-            let nationalityName = nationalityRequirements[i].attribs.title;
-            nationalityName = nationalityName
-              .split("Visa requirements for")
-              .pop()
-              .split("citizens")
-              .shift()
-              .trim();
+            let nationalityName = parseNationalityName(
+              nationalityRequirements,
+              i
+            );
 
             // Get html from each nationality page
             let options = {
@@ -48,15 +39,7 @@ module.exports = function scraper() {
             };
 
             // Appends line to data.csv
-            fs.appendFileSync(
-              "./output/data-nationalities.csv",
-              `${nationalityName};\n`,
-              "utf-8",
-              err => {
-                console.log("Error apending to file");
-                reject("Error apending to file");
-              }
-            );
+            appendToNatCSV(nationalityName, reject);
 
             rp(options).then(nationalityHtml => {
               // Get each field in the table rows
@@ -64,57 +47,19 @@ module.exports = function scraper() {
                 .first()
                 .find("tbody > tr > td > a")
                 .each(function(i) {
-                  let name = $(this)
-                    .text()
-                    .replace(/\[.*\]/g, "") // Removes wiki citations in the format "[num]"
-                    .replace(/[\n\r]+/g, " ") // Removes any returns or newlines.
-                    .trim();
-                  let visa = $(this)
-                    .parent()
-                    .next()
-                    .text()
-                    .replace(/\[.*\]/g, "")
-                    .replace(/[\n\r]+/g, " ")
-                    .trim();
-                  let duration = $(this)
-                    .parent()
-                    .next()
-                    .next()
-                    .text()
-                    .replace(/\[.*\]/g, "") // Removes wiki citations in the format "[num]"
-                    .replace(/[\n\r]+/g, " ")
-                    .trim();
-                  let note = $(this)
-                    .parent()
-                    .next()
-                    .next()
-                    .next()
-                    .text()
-                    .replace(/\[.*\]/g, "") // Removes wiki citations in the format "[num]"
-                    .replace(/[\n\r]+/g, " ")
-                    .trim();
-
-                  let country = `${nationalityName};${name};${visa};${duration};${note};\n`;
-                  country = country;
+                  let countryRow = createRowEntry(nationalityName, $(this));
 
                   // Appends line to data.csv
-                  fs.appendFileSync(
-                    "./output/data.csv",
-                    country,
-                    "utf-8",
-                    err => {
-                      console.log("Error apending to file");
-                      reject("Error apending to file");
-                    }
-                  );
+                  appendToDataCSV(countryRow, reject);
 
                   // Resolve promise on very last item.
-                  if (
-                    urlIndex == urls.length - 1 &&
-                    i == nationalityRequirements.length - 1
-                  ) {
-                    resolve();
-                  }
+                  resolveIfLastItem(
+                    urlIndex,
+                    urls,
+                    i,
+                    nationalityRequirements,
+                    resolve
+                  );
                 });
             });
           });
@@ -126,3 +71,89 @@ module.exports = function scraper() {
     });
   });
 };
+
+function resolveIfLastItem(
+  urlIndex,
+  urls,
+  i,
+  nationalityRequirements,
+  resolve
+) {
+  if (urlIndex == urls.length - 1 && i == nationalityRequirements.length - 1) {
+    resolve();
+  }
+}
+
+function parseNationalityName(nationalityRequirements, i) {
+  let nationalityName = nationalityRequirements[i].attribs.title;
+  nationalityName = nationalityName
+    .split("Visa requirements for")
+    .pop()
+    .split("citizens")
+    .shift()
+    .trim();
+  return nationalityName;
+}
+
+function appendToNatCSV(nationalityName, reject) {
+  fs.appendFileSync(
+    "./output/data-nationalities.csv",
+    `${nationalityName};\n`,
+    "utf-8",
+    err => {
+      console.log("Error apending to file");
+      reject("Error apending to file");
+    }
+  );
+}
+
+function createRowEntry(nationalityName, context) {
+  let name = context
+    .text()
+    .replace(/\[.*\]/g, "") // Removes wiki citations in the format "[num]"
+    .replace(/[\n\r]+/g, " ") // Removes any returns or newlines.
+    .trim();
+  let visa = context
+    .parent()
+    .next()
+    .text()
+    .replace(/\[.*\]/g, "")
+    .replace(/[\n\r]+/g, " ")
+    .trim();
+  let duration = context
+    .parent()
+    .next()
+    .next()
+    .text()
+    .replace(/\[.*\]/g, "")
+    .replace(/[\n\r]+/g, " ")
+    .trim();
+  let note = context
+    .parent()
+    .next()
+    .next()
+    .next()
+    .text()
+    .replace(/\[.*\]/g, "")
+    .replace(/[\n\r]+/g, " ")
+    .trim();
+  let country = `${nationalityName};${name};${visa};${duration};${note};\n`;
+  return country;
+}
+
+function appendToDataCSV(text, reject) {
+  fs.appendFileSync("./output/data.csv", text, "utf-8", err => {
+    console.log("Error apending to file");
+    reject("Error apending to file");
+  });
+}
+
+function clearDataCSV(reject) {
+  const header = `nationality;country;visaType;duration;note;\n`;
+  fs.writeFile("./output/data.csv", header, "utf-8", err => {
+    if (err) {
+      console.log("Error clearing and added header to file", err);
+      reject(err);
+    }
+  });
+}
