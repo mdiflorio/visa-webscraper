@@ -8,3 +8,5 @@ output/data\.csv
 output/data-nationalities\.csv
 
 output/nationalities\.csv
+
+\.env
