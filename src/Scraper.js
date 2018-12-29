@@ -39,7 +39,11 @@ module.exports = function scraper() {
             };
 
             // Appends line to data.csv
-            appendToNatCSV(nationalityName, reject);
+            appendToCSV(
+              `${nationalityName};\n`,
+              "./output/data-nationalities.csv",
+              reject
+            );
 
             rp(options).then(nationalityHtml => {
               // Get each field in the table rows
@@ -50,7 +54,7 @@ module.exports = function scraper() {
                   let countryRow = createRowEntry(nationalityName, $(this));
 
                   // Appends line to data.csv
-                  appendToDataCSV(countryRow, reject);
+                  appendToCSV(countryRow, "./output/data.csv", reject);
 
                   // Resolve promise on very last item.
                   resolveIfLastItem(
@@ -86,25 +90,31 @@ function resolveIfLastItem(
 
 function parseNationalityName(nationalityRequirements, i) {
   let nationalityName = nationalityRequirements[i].attribs.title;
-  nationalityName = nationalityName
+  nationality = nationalityName
     .split("Visa requirements for")
     .pop()
     .split("citizens")
     .shift()
     .trim();
-  return nationalityName;
+
+  if (nationality == "Chinese") {
+    const containsHongKong = nationalityName.match(/(Hong Kong)/g);
+    const containsMacau = nationalityName.match(/(Macau)/g);
+    if (containsHongKong) {
+      nationality = "Chinese (Hong Kong)";
+    } else if (containsMacau) {
+      nationality = "Chinese (Macau)";
+    }
+  }
+
+  return nationality;
 }
 
-function appendToNatCSV(nationalityName, reject) {
-  fs.appendFileSync(
-    "./output/data-nationalities.csv",
-    `${nationalityName};\n`,
-    "utf-8",
-    err => {
-      console.log("Error apending to file");
-      reject("Error apending to file");
-    }
-  );
+function appendToCSV(text, file, reject) {
+  fs.appendFileSync(file, text, "utf-8", err => {
+    console.log("Error apending to file");
+    reject("Error apending to file");
+  });
 }
 
 function createRowEntry(nationalityName, context) {
@@ -139,13 +149,6 @@ function createRowEntry(nationalityName, context) {
     .trim();
   let country = `${nationalityName};${name};${visa};${duration};${note};\n`;
   return country;
-}
-
-function appendToDataCSV(text, reject) {
-  fs.appendFileSync("./output/data.csv", text, "utf-8", err => {
-    console.log("Error apending to file");
-    reject("Error apending to file");
-  });
 }
 
 function clearDataCSV(reject) {
