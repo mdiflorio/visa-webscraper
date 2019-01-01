@@ -38,13 +38,6 @@ module.exports = function scraper() {
               uri: `${BASE_URL}${nationalityRequirements[i].attribs.href}`
             };
 
-            // Appends line to data.csv
-            appendToCSV(
-              `${nationalityName};\n`,
-              "./output/data-nationalities.csv",
-              reject
-            );
-
             rp(options).then(nationalityHtml => {
               // Get each field in the table rows
               $(".sortable", nationalityHtml)
